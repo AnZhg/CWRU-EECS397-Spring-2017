@@ -2,15 +2,19 @@
 
 The C/C++ compiler comes with Raspberry Pi (Raspbian version 4.4.34) is GNU Compiler Collection. To compile a C file (HelloWorld.c as an example), run the following command:
 
-    gcc -Wall -Werror -Os HelloWorld.c -o HelloWorld
+    gcc -Wall -Wextra -Werror -Os HelloWorld.c -o HelloWorld
 
-The `-Wall` flag enables all warnings. `-Werror` forces the compiler to treat warnings as errors. With `-Os` flag, all debug symbols will be stripped, and compiler will optimize the generated executable (smallest, fastest). Debug symbols are useful for debugging the code, but when using the executable instead of debugging/testing, optimized version is prefered ("cleaner", faster).
+The `-Wall` flag enables a set of warnings (but not all warnings). `-Wextra` enables extra warning. `-Werror` forces the compiler to treat a warning as an errors. This three flags could be very useful when debugging. With `-Os` flag, all debug symbols will be stripped, and compiler will optimize the generated executable (smallest, fastest). Debug symbols are useful for debugging the code, but when using the executable instead of debugging/testing, optimized version is prefered ("cleaner", faster). `-o` and the following string specifies output (path and) name. Without this flag and its argument, the compiler will use "current path" and would probably generate an executable named something like "a.out" if the name is not occupied.
 
 After running the command, an executable named HelloWorld should appear if there is no error.
 
-GCC also supports: Objective-C, Objective-C++, and GO programming languages.
+Similarly, to compile a C++ source code (HelloWorld.cpp):
 
-More Infomation see [this link](https://gcc/gnu/org/onlinedocs/gcc/).
+    g++ -Wall -Wextra -Werror -Os HelloWorld.cpp -o HelloWorld
+
+GCC also supports programming languages: Objective-C, Objective-C++, and GO.
+
+More Infomation see [this link](https://gcc.gnu.org/onlinedocs/gcc/).
 
 <br>
 **Java**
@@ -30,9 +34,9 @@ Clang has a similar syntax when compiling C/C++ source code:
 
 For C code:
 
-    clang -Wall -Werror -Os HelloWorld.c -o HelloWorld
+    clang -Wall -Wextra -Werror -Os HelloWorld.c -o HelloWorld
 
 For C++ code:
 
-    clang++ -Wall -Werror -Os HelloWorld.cpp -o HelloWorld
+    clang++ -Wall -Wextra -Werror -Os HelloWorld.cpp -o HelloWorld
 
