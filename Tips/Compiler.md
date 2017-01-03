@@ -18,14 +18,17 @@ More Infomation see [this link](https://gcc.gnu.org/onlinedocs/gcc/).
 
 <br>
 **Java**
+
 Java (Version 1.8.0) is pre-installed in Raspbian. There is also GUI IDE in Raspbian Menu - Programming - BlueJ Java IDE.
 
 <br>
 **Python**
+
 If you love using python, python 2.7.9 and python 3.4.2 come with Raspbian. there are also GUI python IDE, you can find them in Raspberry Menu - Programming - Python 2 (IDLE) / Python 3 (IDLE).
 
 <br>
 **Your Preference**
+
 You can also install your favoriote compiler, such as clang. Run the following command in a terminal:
 
     sudo apt-get install clang
@@ -39,4 +42,3 @@ For C code:
 For C++ code:
 
     clang++ -Wall -Wextra -Werror -Os HelloWorld.cpp -o HelloWorld
-
