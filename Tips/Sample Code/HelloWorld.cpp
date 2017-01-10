@@ -2,8 +2,8 @@
 // Case Western Reserve University
 //
 // Sample code for compiling.
-// Compile: g++ -Wall -Wextra -Werror -Os HelloWorld.cpp -o HelloWorld
-// Run: ./HelloWorld
+// Compile: g++ -Wall -Wextra -Werror -Os HelloWorld.cpp -o HelloWorld_cpp
+// Run: ./HelloWorld_cpp
 
 #include <iostream>
 
