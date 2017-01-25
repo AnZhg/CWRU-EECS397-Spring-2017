@@ -12,9 +12,9 @@ int main(int argc, const char *argv[])
     (void)argv;
     
     // Make these GPIO's available.
-    system("echo \"17\" > /sys/class/gpio/export");    // Red.
-    system("echo \"27\" > /sys/class/gpio/export");    // Green.
-    system("echo \"22\" > /sys/class/gpio/export");    // Blue.
+    system("gpio-admin export 17");    // Red.
+    system("gpio-admin export 27");    // Green.
+    system("gpio-admin export 22");    // Blue.
     
     // Set direction.
     system("echo out > /sys/class/gpio/gpio17/direction");
@@ -23,38 +23,38 @@ int main(int argc, const char *argv[])
     
     // Red.
     // Turn on.
-    system("echo \"1\" > /sys/class/gpio/gpio17/value");
+    system("echo 1 > /sys/class/gpio/gpio17/value");
     
     // Delay around 2 seconds.
     system("sleep 2");
     
     // Turn off.
-    system("echo \"0\" > /sys/class/gpio/gpio17/value");
+    system("echo 0 > /sys/class/gpio/gpio17/value");
     
     // Green.
     // Turn on.
-    system("echo \"1\" > /sys/class/gpio/gpio27/value");
+    system("echo 1 > /sys/class/gpio/gpio27/value");
     
     // Delay around 2 seconds.
     system("sleep 2");
     
     // Turn off.
-    system("echo \"0\" > /sys/class/gpio/gpio27/value");
+    system("echo 0 > /sys/class/gpio/gpio27/value");
     
     // Blue.
     // Turn on.
-    system("echo \"1\" > /sys/class/gpio/gpio22/value");
+    system("echo 1 > /sys/class/gpio/gpio22/value");
     
     // Delay around 2 seconds.
     system("sleep 2");
     
     // Turn off.
-    system("echo \"0\" > /sys/class/gpio/gpio22/value");
+    system("echo 0 > /sys/class/gpio/gpio22/value");
     
     // Give GPIO resources back to operating system.
-    system("echo \"17\" > /sys/class/gpio/unexport");
-    system("echo \"27\" > /sys/class/gpio/unexport");
-    system("echo \"22\" > /sys/class/gpio/unexport");
+    system("gpio-admin unexport 17");
+    system("gpio-admin unexport 27");
+    system("gpio-admin unexport 22");
     
     return 0;
 }
