@@ -1,5 +1,6 @@
-// Created by AnZhg on Jan. 3, 2017.
+// Created by Zhigang An on Jan. 3, 2017.
 // Case Western Reserve University.
+//
 // This is manual retain release version.
 // Compile: gcc -Wall -Wextra HelloWorld.m `gnustep-config --objc-flags` `gnustep-config --base-libs` -o HelloWorld_objc
 // Run: ./HelloWorld_objc

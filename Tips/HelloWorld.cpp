@@ -1,4 +1,4 @@
-// Create by AnZhg on Jan. 3, 2017.
+// Create by Zhigang An on Jan. 3, 2017.
 // Case Western Reserve University
 //
 // Sample code for compiling.
