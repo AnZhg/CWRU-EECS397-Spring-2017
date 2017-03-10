@@ -1,3 +1,10 @@
+// Create by AnZhg on Feb. 15, 2017.
+// Case Western Reserve University
+//
+// Required Library: wiringPi
+// Compile: gcc -Os Screen.c -lwiringPi -o Screen
+// Control display. Handle ctrl + C properly.
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>

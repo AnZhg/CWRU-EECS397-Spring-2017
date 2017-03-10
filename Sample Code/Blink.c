@@ -1,10 +1,11 @@
 // Create by AnZhg on Jan. 14, 2017.
 // Case Western Reserve University
 //
-// Compile: gcc -Wall -Wextra -Werror -Os NAME.c -o NAME
+// Compile: gcc -Wall -Wextra -Werror -Os Blink.c -o Blink
+// Using system commands to control RGB LED.
 
 #include <stdio.h>
-#include<stdlib.h>
+#include <stdlib.h>
 
 int main(int argc, const char *argv[])
 {
