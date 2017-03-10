@@ -3,107 +3,172 @@
 //
 // Required Library: wiringPi
 // Compile: gcc -Os HTSensor_poll.c -lwiringPi -o HTSensor_poll
+//
 // Using polling method to read DHT sensor.
 
-#include <wiringPi.h> 
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdbool.h>
 
-#define MAX_TIME 85
-int DHT11PIN;
-int dht11_val[5] = { 0, 0, 0, 0, 0 };
-bool isinit = false;
-bool InitDHT(int pinval);
+#include <wiringPi.h>
 
-float getTemp();
-float getHumidity();
-bool dht11_read_val();
-bool InitDHT(int pinval)
+// DHT sensor is connected to GPIO4.
+#define DHT_PIN 4
+
+// Reading DHT sensor.
+// Return true if data is valid, false if invalid.
+bool readSensor(uint8_t *humidity, uint8_t *temperature)
 {
-       if (wiringPiSetup() == -1)
-       {
-              isinit = false;
-              return isinit;
-       }
-       DHT11PIN = pinval;
-       // initialize pin
- 
-
-       isinit = true;
-       return isinit;
+    // Decimal part of humidity and temperature.
+    // Not used by sensor. But useful for data validation.
+    uint8_t decHumidity;
+    uint8_t decTemperature;
+    
+    // Checksum.
+    uint8_t checksum;
+    
+    // Count how many high pulses we have.
+    int highPulseCounter = 0;
+    
+    // Data pointer.
+    uint8_t *p;
+    
+    // Timestamps.
+    unsigned int startTime, endTime;
+    
+    // Initialize transaction.
+    // Set pin mode output.
+    pinMode(DHT_PIN, OUTPUT);
+    
+    // Set pull-up resisitor.
+    pullUpDnControl(DHT_PIN, PUD_UP);
+    
+    // Pull low.
+    digitalWrite(DHT_PIN, LOW);
+    
+    // Delay 20 ms.
+    delay(20);
+    
+    // Pull high.
+    digitalWrite(DHT_PIN, HIGH);
+    
+    // Delay 20 us.
+    delayMicroseconds(20);
+    
+    // Set pin mode input.
+    pinMode(DHT_PIN, INPUT);
+    
+    // Wait for response.
+    while(digitalRead(DHT_PIN) == LOW);
+    
+    // Wait for the end of high voltage pulse.
+    delayMicroseconds(60);
+    
+    // Start receiving data.
+    while (highPulseCounter < 40) {
+        // Wait for rising edge.
+        while (digitalRead(DHT_PIN) == LOW);
+        
+        // Get start timestamp.
+        // Note that micros() wraps around after about 71 min.
+        startTime = micros();
+        
+        // We are in high voltage. Count time to avoid infinite loop.
+        while (digitalRead(DHT_PIN) == HIGH) {
+            delayMicroseconds(1);
+            if (micros() - startTime > 100) {
+                // Waited for too long. Failed reading data.
+                return false;
+            }
+        }
+        
+        // Get end timestamp.
+        endTime = micros();
+        
+        // Point to corresponding data.
+        switch (highPulseCounter) {
+            case 0:
+                p = humidity;
+                break;
+            case 8:
+                p = &decHumidity;
+                break;
+            case 16:
+                p = temperature;
+                break;
+            case 24:
+                p = &decTemperature;
+                break;
+            case 32:
+                p = &checksum;
+                break;
+                
+            default:
+                break;
+        }
+        
+        *p <<= 1;
+        
+        // '0': 26~28 us; '1': 70 us.
+        // (28 + 70) / 2 = 49.
+        *p |= endTime - startTime > 49;
+        
+        // Increment counter.
+        ++highPulseCounter;
+    }
+    
+    // Transaction finished. Verify data.
+    if (*humidity + decHumidity + *temperature + decTemperature == checksum) {
+        // Good data.
+        return true;
+    } else {
+        // Bad data.
+        return false;
+    }
 }
- 
 
-float getTemp()
+int main(int argc, const char *argv[])
 {
-       return (float)(dht11_val[2] + dht11_val[3] / 10);
-}
- 
-
-float getHumidity()
-{
-       return (float)(dht11_val[0] + dht11_val[1] / 10);
-}
- 
-
-bool dht11_read_val()
-{
-       if (!isinit)
-              return false;
-       uint8_t lststate = HIGH;
-       uint8_t counter = 0;
-       uint8_t j = 0, i;
-       float farenheit;
-       for (i = 0; i < 5; i++)
-              dht11_val[i] = 0;
-       pinMode(DHT11PIN, OUTPUT);
-       digitalWrite(DHT11PIN, LOW);
-       delay(18);
-       digitalWrite(DHT11PIN, HIGH);
-       delayMicroseconds(40);
-       pinMode(DHT11PIN, INPUT);
-       for (i = 0; i < MAX_TIME; i++)
-       {
-              counter = 0;
-              while (digitalRead(DHT11PIN) == lststate){
-                     counter++;
-                     delayMicroseconds(1);
-                     if (counter == 255)
-                           break;
-              }
-              lststate = digitalRead(DHT11PIN);
-              if (counter == 255)
-                     break;
-              // top 3 transistions are ignored 
-              if ((i >= 4) && (i % 2 == 0)){
-                     dht11_val[j / 8] <<= 1;
-                     if (counter>16)
-                           dht11_val[j / 8] |= 1;
-                     j++;
-              }
-       }
-       // verify cheksum and print the verified data 
-       if ((j >= 40) && (dht11_val[4] == ((dht11_val[0] + dht11_val[1] + dht11_val[2] + dht11_val[3]) & 0xFF)))
-       {
-              if ((dht11_val[0] == 0) && (dht11_val[2] == 0))
-                     return false;
-              return true;
-       }
-       return false;
-}
-
-int main()
-{
-	InitDHT(7);
-	
-	int counter = 0;
-	while(dht11_read_val() == false)
-		++counter;
-		
-	printf("Failed %d times\n", counter);
-	printf("T: %f\nH: %f\n", getTemp(), getHumidity());
+    // Setup GPIO.
+    if (wiringPiSetupGpio() == -1) {
+	fprintf(stderr, "Failed to initialize wiringPi.\n");
+        return -1;
+    }
+    // Temperature and relative humidity.
+    uint8_t temperature, humidity;
+    
+    // Trial times.
+    int attempts = 0;
+    
+    // Success flag.
+    bool didSucceedReading = false;
+    
+    // Read DHT sensor.
+    while (true) {
+        if (readSensor(&humidity, &temperature) == false) {
+            if (++attempts == 20) {
+                // Too many error readings.
+                break;
+            }
+            
+            // Clean up.
+            wiringPiSetupGpio();
+            
+            // Delay a little bit.
+            delay(20);
+        } else {
+            didSucceedReading = true;
+            break;
+        }
+    }
+    
+    if (didSucceedReading) {
+        printf("Failed %d time(s).\n", attempts);
+        printf("Humidity: %d%%. Temperature: %d °C.\n", humidity, temperature);
+    } else {
+        printf("Failed reading sensor.\n");
+    }
 	
 	return 0;
 }
