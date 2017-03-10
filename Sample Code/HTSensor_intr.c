@@ -26,12 +26,12 @@ void interruptHandler()
 // -1 when interrupt time out during initialzation;
 // -2 when interrupt time out during transaction;
 // -3 when bad data.
-int readSensor(uint8_t *temperature, uint8_t *humidity)
+int readSensor(uint8_t *humidity, uint8_t *temperature)
 {
 	// Decimal part of temperature and humidity.
-	// Only for validating data.
-	uint8_t decTemperature;
+	// Not used by sensor. Only for validating data.
 	uint8_t decHumidity;
+        uint8_t decTemperature;
 	
 	// Checksum of data transaction.
 	uint8_t checksum;
@@ -89,16 +89,16 @@ int readSensor(uint8_t *temperature, uint8_t *humidity)
 			// Point to corresponding data.
 			switch (interruptCounter) {
 				case 0:
-					p = temperature;
-					break;
-				case 8:
-					p = &decTemperature;
-					break;
-				case 16:
 					p = humidity;
 					break;
-				case 24:
+				case 8:
 					p = &decHumidity;
+					break;
+				case 16:
+					p = temperature;
+					break;
+				case 24:
+					p = &decTemperature;
 					break;
 				case 32:
 					p = &checksum;
@@ -123,7 +123,7 @@ int readSensor(uint8_t *temperature, uint8_t *humidity)
 	}
 	
 	// We got enough data. Check it.
-	if (*temperature + decTemperature + *humidity + decHumidity == checksum) {
+	if (*humidity + decHumidity + *temperature + decTemperature == checksum) {
 		// Good data.
 		return 0;
 	} else {
@@ -145,7 +145,7 @@ int main(int argv, const char argc[])
 	wiringPiISR(DHT_PIN, INT_EDGE_RISING, &interruptHandler);
 	
 	// Temperature and relative humidity.
-	uint8_t temperature, humidity;
+	uint8_t humidity, temperature;
 	
 	// Trial times.
 	int attempts = 0;
@@ -155,7 +155,7 @@ int main(int argv, const char argc[])
 	
 	// Read DHT sensor.
 	while (true) {
-		if (readSensor(&temperature, &humidity) != 0) {
+		if (readSensor(&humidity, &temperature) != 0) {
 			if (++attempts == 20) {
 				// Too many error readings.
 				break;
@@ -174,7 +174,7 @@ int main(int argv, const char argc[])
 	
 	if (didSucceedReading) {
 		printf("Failed %d time(s).\n", attempts);
-		printf("Temperature: %d °C. Humidity: %d%%.\n", temperature, humidity);
+		printf("Humidity: %d%%. Temperature: %d °C.\n", humidity, temperature);
 	} else {
 		printf("Failed reading sensor.\n");
 	}
