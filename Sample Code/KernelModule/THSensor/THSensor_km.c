@@ -41,7 +41,9 @@ static void convertData(void)
 	unsigned char humidity, decHumidity, temperature, decTemperature, checksum;
 	unsigned char lowEightBits;
 	
+	// Ignore the first three intervals, because that is for initializing communication.
 	int i = 0;
+	
 	// Integer part of (relative) humidity.
 	for (; i < 8; ++i) {
 		humidity <<= 1;
@@ -74,7 +76,7 @@ static void convertData(void)
 	
 	lowEightBits = humidity + decHumidity + temperature + decTemperature;
 	
-	printk(KERN_INFO "Temperature: %i.%i C. Humidity: %i.%i%%.\n", temperature, decTemperature, humidity, decHumidity);
+	printk(KERN_INFO "Temperature: %i.%i C. Humidity: %i.%i%%. ", temperature, decTemperature, humidity, decHumidity);
 	printk(KERN_INFO "%s\n", (lowEightBits == checksum) ? "Correct." : "Wrong.");
 }
 
@@ -117,7 +119,7 @@ enum hrtimer_restart hrTimerCallback(struct hrtimer *timer)
 	
 	// Cancel low precision timer.
 	if (del_timer(&lpTimer)) {
-		printk("Failed to cancel timer.\n");
+		printk(KERN_INFO "Failed to cancel timer.\n");
 	}
 	
 	// Set DHT pin direction as input.
@@ -140,10 +142,16 @@ enum hrtimer_restart hrTimerCallback(struct hrtimer *timer)
 //     Returns IRQ_HANDLED if successful, IRQ_NONE if failed.
 static irq_handler_t interruptHandler(unsigned int irq, void *dev_id, struct pt_regs *regs)
 {
-	// Data counter.
-	static int i = 0;
+	// Ignore first two edges.
+	static int dataCounter = -2;
+	
 	static struct timeval prevTimeVal;
 	static struct timeval currTimeVal;
+	
+	if (dataCounter < 0) {
+		++dataCounter;
+		return (irq_handler_t)IRQ_HANDLED;
+	}
 	
 	// Get value to determine rising/falling edge.
 	if (gpio_get_value(DHT_PIN) == HIGH) {
@@ -156,11 +164,12 @@ static irq_handler_t interruptHandler(unsigned int irq, void *dev_id, struct pt_
 		// Low: 26 - 28 us.
 		// High: 70 us.
 		// (28 + 70) / 2 = 49 us.
-		data[i++] = ((currTimeVal.tv_sec - prevTimeVal.tv_sec) * 1000000L + currTimeVal.tv_usec) - prevTimeVal.tv_usec > 49;
+		data[dataCounter++] = ((currTimeVal.tv_sec - prevTimeVal.tv_sec) * 1000000L + currTimeVal.tv_usec) - prevTimeVal.tv_usec > 49;
+		if (dataCounter == 40) {
+			// When data acquisation is done, start conversion.
+			convertData();
+		}
 	}
-	
-	// When data acquisation is done, start conversion.
-	convertData();
 	
 	// Tell caller that interrupt has been handled correctly.
 	return (irq_handler_t)IRQ_HANDLED;
